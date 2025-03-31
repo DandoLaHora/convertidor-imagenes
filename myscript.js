@@ -64,7 +64,7 @@ fileInput.addEventListener('change', () => {
 });
 
 function handleFiles(files) {
-    const validExtensions = ['image/avif', 'image/png', 'image/jpeg']; // Tipos permitidos
+    const validExtensions = ['image/avif', 'image/png', 'image/jpeg', 'image/webp']; // Agregar WebP
     Array.from(files).forEach(file => {
         if (validExtensions.includes(file.type)) {
             avifFiles.push(file);
@@ -168,7 +168,17 @@ function convertAvifToFormat(imageFile, index, format) {
 
                 ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-                const mimeType = format === 'webp' ? 'image/webp' : 'image/jpeg';
+                // Determinar el formato de salida
+                let outputFormat = format;
+                let mimeType;
+
+                // Si el archivo original ya es WebP y el formato seleccionado es WebP, mantener WebP
+                if (imageFile.type === 'image/webp' && format === 'webp') {
+                    mimeType = 'image/webp';
+                } else {
+                    mimeType = format === 'webp' ? 'image/webp' : 'image/jpeg';
+                }
+
                 const dataUrl = canvas.toDataURL(mimeType, 0.9);
 
                 const previewItems = document.querySelectorAll('.preview-item');
@@ -177,13 +187,13 @@ function convertAvifToFormat(imageFile, index, format) {
                     imgElement.src = dataUrl;
 
                     const filenameElement = previewItems[index].querySelector('.file-name');
-                    const newFilename = imageFile.name.replace(/\.(avif|png|jpg|jpeg)$/i, `.${format}`);
+                    const newFilename = imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`);
                     filenameElement.textContent = newFilename;
                 }
 
                 convertedImages.push({
                     dataUrl: dataUrl,
-                    filename: imageFile.name.replace(/\.(avif|png|jpg|jpeg)$/i, `.${format}`)
+                    filename: imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`)
                 });
 
                 resolve();
@@ -255,9 +265,9 @@ function removeImage(index) {
     // Deshabilitar el botón de convertir si no quedan imágenes
     if (avifFiles.length === 0) {
         convertButton.disabled = true;
-        updateStatus("No hay imágenes para convertir");
+        updateStatus("No hay imágenes para procesar");
     } else {
-        updateStatus(`Se han seleccionado ${avifFiles.length} archivos AVIF`);
+        updateStatus(`Se han seleccionado ${avifFiles.length} archivos`);
     }
 }
 
