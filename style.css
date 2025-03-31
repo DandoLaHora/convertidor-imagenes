@@ -1,0 +1,96 @@
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    line-height: 1.6;
+}
+h1 {
+    text-align: center;
+    color: #333;
+}
+.container {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    text-align: center;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+.buttons {
+    margin: 20px 0;
+}
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+}
+button:hover {
+    background-color: #45a049;
+}
+#preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+.preview-item {
+    position: relative;
+    width: 150px;
+    margin-bottom: 20px;
+}
+.preview-item img {
+    max-width: 100%;
+    border: 1px solid #ddd;
+}
+.preview-item .delete-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.preview-item .delete-button:hover {
+    background-color: darkred;
+}
+.file-name {
+    font-size: 12px;
+    word-break: break-all;
+    margin-top: 5px;
+}
+.progress-container {
+    margin-top: 20px;
+}
+#status {
+    margin-top: 10px;
+    font-style: italic;
+}
+select {
+    padding: 10px;
+    font-size: 16px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+#zip-name {
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px 0;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    width: calc(100% - 20px);
+    box-sizing: border-box;
+}
