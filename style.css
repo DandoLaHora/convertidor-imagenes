@@ -66,6 +66,29 @@ button:hover {
 .preview-item .delete-button:hover {
     background-color: darkred;
 }
+.preview-item .download-button {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-item .select-checkbox {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    transform: scale(1.5);
+    cursor: pointer;
+}
 .file-name {
     font-size: 12px;
     word-break: break-all;
@@ -115,4 +138,8 @@ gap: 2rem;
 
 .zip-name-label {
 font-weight: bolder;
+}
+
+.download-button {
+    background-color: transparent !important;
 }

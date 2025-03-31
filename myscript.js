@@ -11,6 +11,8 @@ const zipNameInput = document.getElementById('zip-name'); // Campo para el nombr
 const downloadDirectButton = document.getElementById('download-direct'); // Botón para descarga directa
 const widthInput = document.getElementById('width-input');
 const heightInput = document.getElementById('height-input');
+const backgroundColorInput = document.getElementById('background-color');
+const downloadSelectedButton = document.getElementById('download-selected'); // Botón para descargar seleccionadas
 
 let avifFiles = [];
 let convertedImages = [];
@@ -62,44 +64,47 @@ fileInput.addEventListener('change', () => {
 });
 
 function handleFiles(files) {
-    if (files.length === 0) return;
-    
-    avifFiles = [...files].filter(file => file.name.toLowerCase().endsWith('.avif'));
-    
-    if (avifFiles.length === 0) {
-        statusElement.textContent = "No se seleccionaron archivos AVIF válidos";
-        return;
-    }
-    
-    updateStatus(`Se han seleccionado ${avifFiles.length} archivos AVIF`);
-    convertButton.disabled = false;
-    
-    // Limpiar previsualizaciones anteriores
-    previewArea.innerHTML = '';
-    
-    // Mostrar archivos seleccionados
-    avifFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            displayPreview(e.target.result, file.name, index);
-        };
-        reader.readAsDataURL(file);
+    const validExtensions = ['image/avif', 'image/png', 'image/jpeg']; // Tipos permitidos
+    Array.from(files).forEach(file => {
+        if (validExtensions.includes(file.type)) {
+            avifFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                displayPreview(e.target.result, file.name, avifFiles.length - 1);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert(`El archivo ${file.name} no es un tipo de imagen válido.`);
+        }
     });
+
+    if (avifFiles.length > 0) {
+        convertButton.disabled = false;
+        updateStatus(`Se han seleccionado ${avifFiles.length} archivos.`);
+    }
 }
 
 function displayPreview(src, filename, index) {
     const item = document.createElement('div');
     item.className = 'preview-item';
     item.innerHTML = `
+        <input type="checkbox" class="select-checkbox" data-index="${index}" />
         <img src="${src}" alt="Previsualización" />
         <div class="file-name">${filename}</div>
         <button class="delete-button" data-index="${index}">X</button>
+        <button class="download-button" data-index="${index}" title="Descargar">
+            ⬇️
+        </button>
     `;
     previewArea.appendChild(item);
 
     // Agregar evento para eliminar la imagen
     const deleteButton = item.querySelector('.delete-button');
     deleteButton.addEventListener('click', () => removeImage(index));
+
+    // Agregar evento para descargar la imagen individualmente
+    const downloadButton = item.querySelector('.download-button');
+    downloadButton.addEventListener('click', () => downloadSingleImage(convertedImages[index].dataUrl, convertedImages[index].filename));
 }
 
 // Conversión de AVIF a JPG o WebP
@@ -123,7 +128,7 @@ async function convertImages() {
     downloadDirectButton.disabled = false; // Habilitar el botón de descarga directa
 }
 
-function convertAvifToFormat(avifFile, index, format) {
+function convertAvifToFormat(imageFile, index, format) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = function (e) {
@@ -138,8 +143,11 @@ function convertAvifToFormat(avifFile, index, format) {
 
                 const ctx = canvas.getContext('2d');
 
-                // Dibujar un fondo blanco
-                ctx.fillStyle = 'white';
+                // Obtener el color seleccionado
+                const backgroundColor = backgroundColorInput.value;
+
+                // Dibujar el fondo con el color seleccionado
+                ctx.fillStyle = backgroundColor;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 // Calcular las dimensiones para centrar la imagen
@@ -169,20 +177,20 @@ function convertAvifToFormat(avifFile, index, format) {
                     imgElement.src = dataUrl;
 
                     const filenameElement = previewItems[index].querySelector('.file-name');
-                    const newFilename = avifFile.name.replace('.avif', `.${format}`);
+                    const newFilename = imageFile.name.replace(/\.(avif|png|jpg|jpeg)$/i, `.${format}`);
                     filenameElement.textContent = newFilename;
                 }
 
                 convertedImages.push({
                     dataUrl: dataUrl,
-                    filename: avifFile.name.replace('.avif', `.${format}`)
+                    filename: imageFile.name.replace(/\.(avif|png|jpg|jpeg)$/i, `.${format}`)
                 });
 
                 resolve();
             };
             img.src = e.target.result;
         };
-        reader.readAsDataURL(avifFile);
+        reader.readAsDataURL(imageFile);
     });
 }
 
@@ -266,3 +274,34 @@ function updatePreview() {
         reader.readAsDataURL(file);
     });
 }
+
+// Habilitar el botón si hay imágenes seleccionadas
+previewArea.addEventListener('change', () => {
+    const selectedCheckboxes = document.querySelectorAll('.select-checkbox:checked');
+    downloadSelectedButton.disabled = selectedCheckboxes.length === 0;
+});
+
+// Descargar las imágenes seleccionadas
+downloadSelectedButton.addEventListener('click', async () => {
+    const selectedCheckboxes = document.querySelectorAll('.select-checkbox:checked');
+    if (selectedCheckboxes.length === 0) return;
+
+    const zip = new JSZip();
+    const folder = zip.folder("imagenes_seleccionadas");
+
+    selectedCheckboxes.forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index, 10);
+        const image = convertedImages[index];
+        const base64Data = image.dataUrl.split(",")[1];
+        folder.file(image.filename, base64Data, { base64: true });
+    });
+
+    try {
+        const content = await zip.generateAsync({ type: "blob" });
+        saveAs(content, "imagenes_seleccionadas.zip");
+        updateStatus("Las imágenes seleccionadas han sido descargadas.");
+    } catch (error) {
+        console.error("Error al generar el archivo ZIP:", error);
+        updateStatus("Error al generar el archivo ZIP.");
+    }
+});
