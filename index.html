@@ -1,47 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Convertidor AVIF a JPG</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <h1>Convertidor AVIF a JPG</h1>
     <div class="container" id="drop-area">
-        <p>Arrastra y suelta archivos AVIF aquí o</p>
-        <input type="file" id="file-input" accept=".avif" multiple hidden />
-        <button id="select-files">Seleccionar archivos</button>
+      <p>Arrastra y suelta archivos AVIF aquí o</p>
+      <input type="file" id="file-input" accept=".avif" multiple hidden />
+      <button id="select-files">Seleccionar archivos</button>
     </div>
-    
+
     <div class="buttons">
-        <label for="format-select">Formato de exportación:</label>
-        <select id="format-select">
-            <option value="jpg">JPG</option>
-            <option value="webp">WebP</option>
-        </select>
-        <button id="convert-button" disabled>Convertir</button>
-        <button id="download-all" disabled>Descargar todos</button>
-        <input type="text" id="zip-name" placeholder="Nombre del archivo ZIP" value="imagenes_convertidas" />
-        <button id="download-direct" disabled>Descargar directo</button>
+      <label for="format-select">Formato de exportación:</label>
+      <select id="format-select">
+        <option value="jpg">JPG</option>
+        <option value="webp">WebP</option>
+      </select>
+      <button id="convert-button" disabled>Convertir</button>
+      <button id="download-all" disabled>Descargar todos (.zip)</button>
+      <div>
+          <label for="zip-name" id="zip-name-label">Nombre de archivo Zip</label>
+          <input
+            type="text"
+            id="zip-name"
+            placeholder="Nombre del archivo ZIP"
+            value="imagenes_convertidas"
+          />
+
+      </div>
+      <button id="download-direct" disabled>
+        Descargar directo (una a una)
+      </button>
     </div>
-    
-    <div class="buttons">
+
+    <div class="buttons seccion-dimensiones">
+      <h4>Dimensiones:</h4>
+      <div>
         <label for="width-input">Ancho:</label>
         <input type="number" id="width-input" value="1000" min="1" />
+      </div>
+      <div>
         <label for="height-input">Alto:</label>
         <input type="number" id="height-input" value="1000" min="1" />
+      </div>
     </div>
-    
+
     <div class="progress-container">
-        <div id="status"></div>
+      <div id="status"></div>
     </div>
-    
+
     <div id="preview"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<script src="myscript.js"></script>
-
-</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="myscript.js"></script>
+  </body>
 </html>

@@ -85,6 +85,16 @@ select {
     border-radius: 4px;
     border: 1px solid #ccc;
 }
+
+.seccion-dimensiones {
+    display: flex;
+    justify-content: flex-start;
+gap: 2rem;
+    align-items: center;
+    flex-direction: row;
+    align-content: center;
+}
+
 #zip-name {
     padding: 10px;
     font-size: 16px;
@@ -93,4 +103,16 @@ select {
     border: 1px solid #ccc;
     width: calc(100% - 20px);
     box-sizing: border-box;
+}
+#convert-button {
+    background-color: red;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: url('https://cdn.shopify.com/s/files/1/0007/7660/1715/files/icons8-alien-32.png?v=1743450075'), auto;
+}	
+
+.zip-name-label {
+font-weight: bolder;
 }
