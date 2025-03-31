@@ -64,9 +64,15 @@ fileInput.addEventListener('change', () => {
 });
 
 function handleFiles(files) {
-    const validExtensions = ['image/avif', 'image/png', 'image/jpeg', 'image/webp']; // Agregar WebP
+    // Comprobar tanto por tipo MIME como por extensión de archivo
     Array.from(files).forEach(file => {
-        if (validExtensions.includes(file.type)) {
+        // Obtener la extensión del nombre de archivo
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const validMimeTypes = ['image/avif', 'image/png', 'image/jpeg', 'image/webp'];
+        const validExtensions = ['avif', 'png', 'jpg', 'jpeg', 'webp'];
+        
+        // Aceptar el archivo si el tipo MIME o la extensión es válida
+        if (validMimeTypes.includes(file.type) || validExtensions.includes(fileExtension)) {
             avifFiles.push(file);
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -74,6 +80,7 @@ function handleFiles(files) {
             };
             reader.readAsDataURL(file);
         } else {
+            console.log(`Tipo rechazado: ${file.type}, extensión: ${fileExtension}`);
             alert(`El archivo ${file.name} no es un tipo de imagen válido.`);
         }
     });
