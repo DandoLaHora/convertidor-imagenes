@@ -95,13 +95,9 @@ function displayPreview(src, filename, index) {
     const item = document.createElement('div');
     item.className = 'preview-item';
     item.innerHTML = `
-        <input type="checkbox" class="select-checkbox" data-index="${index}" />
         <img src="${src}" alt="Previsualización" />
         <div class="file-name">${filename}</div>
-        <button class="delete-button" data-index="${index}">X</button>
-        <button class="download-button" data-index="${index}" title="Descargar">
-            ⬇️
-        </button>
+        <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${filename}" />
     `;
     previewArea.appendChild(item);
 
@@ -109,7 +105,16 @@ function displayPreview(src, filename, index) {
     const deleteButton = item.querySelector('.delete-button');
     deleteButton.addEventListener('click', () => removeImage(index));
 
-    // Agregar evento para descargar la imagen individualmente
+    // Actualizar el nombre del archivo en la lista cuando se cambie el valor del input
+    const renameInput = item.querySelector('.rename-input');
+    renameInput.addEventListener('input', (e) => {
+        const newName = e.target.value.trim();
+        if (convertedImages[index]) {
+            convertedImages[index].filename = newName || filename; // Usar el nuevo nombre o el original si está vacío
+        }
+    });
+
+    // Elimina este bloque dentro de displayPreview
     const downloadButton = item.querySelector('.download-button');
     downloadButton.addEventListener('click', () => downloadSingleImage(convertedImages[index].dataUrl, convertedImages[index].filename));
 }
@@ -219,12 +224,27 @@ async function downloadAllImages() {
 
     updateStatus("Preparando imágenes para descarga...");
 
+    // Obtener el formato seleccionado y el prefijo
+    const selectedFormat = formatSelect.value; // "webp" o "jpg"
+    const prefix = document.getElementById('prefix-input').value.trim(); // Obtener el prefijo
+
+    // Sincronizar los nombres personalizados con los inputs
+    const renameInputs = document.querySelectorAll('.rename-input');
+    renameInputs.forEach((input, index) => {
+        const newName = input.value.trim();
+        if (newName) {
+            // Agregar el prefijo y la extensión seleccionada al final del nombre personalizado
+            convertedImages[index].filename = `${prefix}${newName}.${selectedFormat}`;
+        }
+    });
+
     const zip = new JSZip();
     const folder = zip.folder("imagenes_convertidas");
 
     convertedImages.forEach(image => {
         const base64Data = image.dataUrl.split(",")[1]; // Extraer datos base64
-        folder.file(image.filename, base64Data, { base64: true });
+        const updatedFilename = image.filename; // Usar el nombre actualizado con el prefijo y la extensión
+        folder.file(updatedFilename, base64Data, { base64: true });
     });
 
     try {
@@ -242,8 +262,30 @@ async function downloadAllImages() {
 downloadDirectButton.addEventListener('click', () => {
     if (convertedImages.length === 0) return;
 
-    convertedImages.forEach(image => {
-        downloadSingleImage(image.dataUrl, image.filename);
+    updateStatus("Descargando imágenes una por una...");
+
+    // Obtener el formato seleccionado y el prefijo
+    const selectedFormat = formatSelect.value; // "webp" o "jpg"
+    const prefix = document.getElementById('prefix-input').value.trim(); // Obtener el prefijo
+
+    // Sincronizar los nombres personalizados con los inputs y descargar
+    const renameInputs = document.querySelectorAll('.rename-input');
+    renameInputs.forEach((input, index) => {
+        const originalFilename = avifFiles[index].name; // Nombre original para fallback
+        let newName = input.value.trim();
+
+        // Si el input está vacío, usar el nombre original sin extensión
+        if (!newName) {
+            newName = originalFilename.replace(/\.[^/.]+$/, "");
+        }
+
+        // Construir el nombre final con prefijo y extensión
+        const finalFilename = `${prefix}${newName}.${selectedFormat}`;
+
+        // Descargar la imagen individualmente con el nombre final
+        if (convertedImages[index]) {
+            downloadSingleImage(convertedImages[index].dataUrl, finalFilename);
+        }
     });
 
     updateStatus("Todas las imágenes han sido descargadas directamente");
@@ -291,34 +333,3 @@ function updatePreview() {
         reader.readAsDataURL(file);
     });
 }
-
-// Habilitar el botón si hay imágenes seleccionadas
-previewArea.addEventListener('change', () => {
-    const selectedCheckboxes = document.querySelectorAll('.select-checkbox:checked');
-    downloadSelectedButton.disabled = selectedCheckboxes.length === 0;
-});
-
-// Descargar las imágenes seleccionadas
-downloadSelectedButton.addEventListener('click', async () => {
-    const selectedCheckboxes = document.querySelectorAll('.select-checkbox:checked');
-    if (selectedCheckboxes.length === 0) return;
-
-    const zip = new JSZip();
-    const folder = zip.folder("imagenes_seleccionadas");
-
-    selectedCheckboxes.forEach(checkbox => {
-        const index = parseInt(checkbox.dataset.index, 10);
-        const image = convertedImages[index];
-        const base64Data = image.dataUrl.split(",")[1];
-        folder.file(image.filename, base64Data, { base64: true });
-    });
-
-    try {
-        const content = await zip.generateAsync({ type: "blob" });
-        saveAs(content, "imagenes_seleccionadas.zip");
-        updateStatus("Las imágenes seleccionadas han sido descargadas.");
-    } catch (error) {
-        console.error("Error al generar el archivo ZIP:", error);
-        updateStatus("Error al generar el archivo ZIP.");
-    }
-});

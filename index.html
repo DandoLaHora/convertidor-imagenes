@@ -20,8 +20,13 @@
         <option value="webp">WebP</option>
         <option value="jpg">JPG</option>
       </select>
+      <label for="prefix-input">Prefijo (opcional):</label>
+      <input type="text" id="prefix-input" placeholder="Ejemplo: SKU123_" />
       <button id="convert-button" disabled>Convertir</button>
       <button id="download-all" disabled>Descargar todos (.zip)</button>
+      <button id="download-direct" disabled>
+        Descargar una a una
+      </button>
       <div>
           <label for="zip-name" id="zip-name-label">Nombre de archivo Zip</label>
           <input
@@ -32,10 +37,7 @@
           />
 
       </div>
-      <button id="download-direct" disabled>
-        Descargar directo (una a una)
-      </button>
-      <button id="download-selected" disabled>Descargar seleccionadas</button>
+
     </div>
 
     <div class="buttons seccion-dimensiones">
@@ -51,6 +53,7 @@
       <div>
         <label for="background-color">Color de fondo:</label>
         <input type="color" id="background-color" value="#ffffff" />
+        <small class="helper-text">Nota: Si la imagen tiene transparencia, este color se utilizará como fondo.</small>
       </div>
     </div>
 

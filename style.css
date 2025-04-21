@@ -35,7 +35,7 @@ button:hover {
 #preview {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 10%;
     margin-top: 20px;
 }
 .preview-item {
@@ -47,48 +47,11 @@ button:hover {
     max-width: 100%;
     border: 1px solid #ddd;
 }
-.preview-item .delete-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: red;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+
 .preview-item .delete-button:hover {
     background-color: darkred;
 }
-.preview-item .download-button {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
 
-.preview-item .select-checkbox {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    transform: scale(1.5);
-    cursor: pointer;
-}
 .file-name {
     font-size: 12px;
     word-break: break-all;
@@ -133,7 +96,7 @@ gap: 2rem;
     padding: 10px 15px;
     border: none;
     border-radius: 4px;
-    cursor: url('https://cdn.shopify.com/s/files/1/0007/7660/1715/files/icons8-alien-32.png?v=1743450075'), auto;
+    cursor: pointer;
 }	
 
 .zip-name-label {
@@ -142,4 +105,12 @@ font-weight: bolder;
 
 .download-button {
     background-color: transparent !important;
+}
+
+.helper-text {
+    display: inline-block;
+    font-size: 0.6rem;
+    color: #666;
+    margin-top: 5px;
+    text-align: left;
 }
