@@ -1,335 +1,339 @@
-// Variables globales
-const dropArea = document.getElementById('drop-area');
-const fileInput = document.getElementById('file-input');
-const selectButton = document.getElementById('select-files');
-const convertButton = document.getElementById('convert-button');
-const downloadAllButton = document.getElementById('download-all');
-const previewArea = document.getElementById('preview');
-const statusElement = document.getElementById('status');
-const formatSelect = document.getElementById('format-select'); // Nuevo selector de formato
-const zipNameInput = document.getElementById('zip-name'); // Campo para el nombre del ZIP
-const downloadDirectButton = document.getElementById('download-direct'); // Botón para descarga directa
-const widthInput = document.getElementById('width-input');
-const heightInput = document.getElementById('height-input');
-const backgroundColorInput = document.getElementById('background-color');
-const downloadSelectedButton = document.getElementById('download-selected'); // Botón para descargar seleccionadas
+      const dropArea = document.getElementById('drop-area');
+      const fileInput = document.getElementById('file-input');
+      const selectButton = document.getElementById('select-files');
+      const convertButton = document.getElementById('convert-button');
+      const downloadAllButton = document.getElementById('download-all');
+      const previewArea = document.getElementById('preview');
+      const statusElement = document.getElementById('status');
+      const formatSelect = document.getElementById('format-select');
+      const zipNameInput = document.getElementById('zip-name');
+      const downloadDirectButton = document.getElementById('download-direct');
+      const widthInput = document.getElementById('width-input');
+      const heightInput = document.getElementById('height-input');
+      const backgroundColorInput = document.getElementById('background-color');
+      
+      // Elementos para padding
+      const paddingTopInput = document.getElementById('padding-top');
+      const paddingBottomInput = document.getElementById('padding-bottom');
+      const paddingLeftInput = document.getElementById('padding-left');
+      const paddingRightInput = document.getElementById('padding-right');
+      const paddingTopUnitSelect = document.getElementById('padding-top-unit');
+      const paddingBottomUnitSelect = document.getElementById('padding-bottom-unit');
+      const paddingLeftUnitSelect = document.getElementById('padding-left-unit');
+      const paddingRightUnitSelect = document.getElementById('padding-right-unit');
 
-let avifFiles = [];
-let convertedImages = [];
+      let avifFiles = [];
+      let convertedImages = [];
 
-// Eventos para drag and drop
-['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, preventDefaults, false);
-});
+      // Eventos para drag and drop
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dropArea.addEventListener(eventName, preventDefaults, false);
+      });
 
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-}
+      function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+      }
 
-['dragenter', 'dragover'].forEach(eventName => {
-    dropArea.addEventListener(eventName, highlight, false);
-});
+      ['dragenter', 'dragover'].forEach(eventName => {
+          dropArea.addEventListener(eventName, highlight, false);
+      });
 
-['dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, unhighlight, false);
-});
+      ['dragleave', 'drop'].forEach(eventName => {
+          dropArea.addEventListener(eventName, unhighlight, false);
+      });
 
-function highlight() {
-    dropArea.style.borderColor = '#4CAF50';
-    dropArea.style.backgroundColor = '#f8f8f8';
-}
+      function highlight() {
+          dropArea.style.borderColor = '#4CAF50';
+          dropArea.style.backgroundColor = '#f8f8f8';
+      }
 
-function unhighlight() {
-    dropArea.style.borderColor = '#ccc';
-    dropArea.style.backgroundColor = 'transparent';
-}
+      function unhighlight() {
+          dropArea.style.borderColor = '#ccc';
+          dropArea.style.backgroundColor = 'transparent';
+      }
 
-// Manejo de archivos soltados
-dropArea.addEventListener('drop', handleDrop, false);
+      // Manejo de archivos soltados
+      dropArea.addEventListener('drop', handleDrop, false);
 
-function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    handleFiles(files);
-}
+      function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          handleFiles(files);
+      }
 
-// Manejo de selección de archivos
-selectButton.addEventListener('click', () => {
-    fileInput.click();
-});
+      // Manejo de selección de archivos
+      selectButton.addEventListener('click', () => {
+          fileInput.click();
+      });
 
-fileInput.addEventListener('change', () => {
-    handleFiles(fileInput.files);
-});
+      fileInput.addEventListener('change', () => {
+          handleFiles(fileInput.files);
+      });
 
-function handleFiles(files) {
-    // Comprobar tanto por tipo MIME como por extensión de archivo
-    Array.from(files).forEach(file => {
-        // Obtener la extensión del nombre de archivo
-        const fileExtension = file.name.split('.').pop().toLowerCase();
-        const validMimeTypes = ['image/avif', 'image/png', 'image/jpeg', 'image/webp'];
-        const validExtensions = ['avif', 'png', 'jpg', 'jpeg', 'webp'];
-        
-        // Aceptar el archivo si el tipo MIME o la extensión es válida
-        if (validMimeTypes.includes(file.type) || validExtensions.includes(fileExtension)) {
-            avifFiles.push(file);
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                displayPreview(e.target.result, file.name, avifFiles.length - 1);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            console.log(`Tipo rechazado: ${file.type}, extensión: ${fileExtension}`);
-            alert(`El archivo ${file.name} no es un tipo de imagen válido.`);
-        }
-    });
+      function handleFiles(files) {
+          Array.from(files).forEach(file => {
+              const fileExtension = file.name.split('.').pop().toLowerCase();
+              const validMimeTypes = ['image/avif', 'image/png', 'image/jpeg', 'image/webp'];
+              const validExtensions = ['avif', 'png', 'jpg', 'jpeg', 'webp'];
+              
+              if (validMimeTypes.includes(file.type) || validExtensions.includes(fileExtension)) {
+                  avifFiles.push(file);
+                  const reader = new FileReader();
+                  reader.onload = function (e) {
+                      displayPreview(e.target.result, file.name, avifFiles.length - 1);
+                  };
+                  reader.readAsDataURL(file);
+              } else {
+                  console.log(`Tipo rechazado: ${file.type}, extensión: ${fileExtension}`);
+                  alert(`El archivo ${file.name} no es un tipo de imagen válido.`);
+              }
+          });
 
-    if (avifFiles.length > 0) {
-        convertButton.disabled = false;
-        updateStatus(`Se han seleccionado ${avifFiles.length} archivos.`);
-    }
-}
+          if (avifFiles.length > 0) {
+              convertButton.disabled = false;
+              updateStatus(`Se han seleccionado ${avifFiles.length} archivos.`);
+          }
+      }
 
-function displayPreview(src, filename, index) {
-    const item = document.createElement('div');
-    item.className = 'preview-item';
-    item.innerHTML = `
-        <img src="${src}" alt="Previsualización" />
-        <div class="file-name">${filename}</div>
-        <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${filename}" />
-    `;
-    previewArea.appendChild(item);
+      function displayPreview(src, filename, index) {
+          const item = document.createElement('div');
+          item.className = 'preview-item';
+          item.innerHTML = `
+              <img src="${src}" alt="Previsualización" />
+              <div class="file-name">${filename}</div>
+              <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${filename}" />
+          `;
+          previewArea.appendChild(item);
 
-    // Agregar evento para eliminar la imagen
-    const deleteButton = item.querySelector('.delete-button');
-    deleteButton.addEventListener('click', () => removeImage(index));
+          const renameInput = item.querySelector('.rename-input');
+          renameInput.addEventListener('input', (e) => {
+              const newName = e.target.value.trim();
+              if (convertedImages[index]) {
+                  convertedImages[index].filename = newName || filename;
+              }
+          });
+      }
 
-    // Actualizar el nombre del archivo en la lista cuando se cambie el valor del input
-    const renameInput = item.querySelector('.rename-input');
-    renameInput.addEventListener('input', (e) => {
-        const newName = e.target.value.trim();
-        if (convertedImages[index]) {
-            convertedImages[index].filename = newName || filename; // Usar el nuevo nombre o el original si está vacío
-        }
-    });
+      // Función para calcular padding en píxeles
+      function calculatePadding(paddingValue, unit, imageSize) {
+          if (unit === '%') {
+              return Math.round((paddingValue / 100) * imageSize);
+          }
+          return paddingValue; // Ya está en píxeles
+      }
 
-    // Elimina este bloque dentro de displayPreview
-    const downloadButton = item.querySelector('.download-button');
-    downloadButton.addEventListener('click', () => downloadSingleImage(convertedImages[index].dataUrl, convertedImages[index].filename));
-}
+      // Conversión de imágenes con padding
+      convertButton.addEventListener('click', convertImages);
 
-// Conversión de AVIF a JPG o WebP
-convertButton.addEventListener('click', convertImages);
+      async function convertImages() {
+          if (avifFiles.length === 0) return;
 
-async function convertImages() {
-    if (avifFiles.length === 0) return;
+          const selectedFormat = formatSelect.value;
+          convertButton.disabled = true;
+          updateStatus("Convirtiendo imágenes...");
+          convertedImages = [];
 
-    const selectedFormat = formatSelect.value; // Obtener el formato seleccionado (jpg o webp)
-    convertButton.disabled = true;
-    updateStatus("Convirtiendo imágenes...");
-    convertedImages = [];
+          for (let i = 0; i < avifFiles.length; i++) {
+              updateStatus(`Convirtiendo imagen ${i + 1} de ${avifFiles.length}`);
+              await convertImageWithPadding(avifFiles[i], i, selectedFormat);
+          }
 
-    for (let i = 0; i < avifFiles.length; i++) {
-        updateStatus(`Convirtiendo imagen ${i + 1} de ${avifFiles.length}`);
-        await convertAvifToFormat(avifFiles[i], i, selectedFormat);
-    }
+          updateStatus(`Se han convertido ${convertedImages.length} imágenes a ${selectedFormat.toUpperCase()}`);
+          downloadAllButton.disabled = false;
+          downloadDirectButton.disabled = false;
+      }
 
-    updateStatus(`Se han convertido ${convertedImages.length} imágenes a ${selectedFormat.toUpperCase()}`);
-    downloadAllButton.disabled = false;
-    downloadDirectButton.disabled = false; // Habilitar el botón de descarga directa
-}
+      function convertImageWithPadding(imageFile, index, format) {
+          return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                  const img = new Image();
+                  img.onload = function () {
+                      const targetWidth = parseInt(widthInput.value, 10) || 1000;
+                      const targetHeight = parseInt(heightInput.value, 10) || 1000;
+                      
+                      // Obtener valores de padding vertical
+                      const paddingTopValue = parseInt(paddingTopInput.value, 10) || 0;
+                      const paddingBottomValue = parseInt(paddingBottomInput.value, 10) || 0;
+                      const paddingTopUnit = paddingTopUnitSelect.value;
+                      const paddingBottomUnit = paddingBottomUnitSelect.value;
+                      
+                      // Obtener valores de padding horizontal
+                      const paddingLeftValue = parseInt(paddingLeftInput.value, 10) || 0;
+                      const paddingRightValue = parseInt(paddingRightInput.value, 10) || 0;
+                      const paddingLeftUnit = paddingLeftUnitSelect.value;
+                      const paddingRightUnit = paddingRightUnitSelect.value;
+                      
+                      // Calcular padding en píxeles basado en la imagen original
+                      const paddingTopPx = calculatePadding(paddingTopValue, paddingTopUnit, img.height);
+                      const paddingBottomPx = calculatePadding(paddingBottomValue, paddingBottomUnit, img.height);
+                      const paddingLeftPx = calculatePadding(paddingLeftValue, paddingLeftUnit, img.width);
+                      const paddingRightPx = calculatePadding(paddingRightValue, paddingRightUnit, img.width);
+                      
+                      // El canvas total incluye todo el padding
+                      const totalCanvasWidth = targetWidth + paddingLeftPx + paddingRightPx;
+                      const totalCanvasHeight = targetHeight + paddingTopPx + paddingBottomPx;
+                      
+                      const canvas = document.createElement('canvas');
+                      canvas.width = totalCanvasWidth;
+                      canvas.height = totalCanvasHeight;
 
-function convertAvifToFormat(imageFile, index, format) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const img = new Image();
-            img.onload = function () {
-                const targetWidth = parseInt(widthInput.value, 10) || 1000;
-                const targetHeight = parseInt(heightInput.value, 10) || 1000;
+                      const ctx = canvas.getContext('2d');
+                      const backgroundColor = backgroundColorInput.value;
 
-                const canvas = document.createElement('canvas');
-                canvas.width = targetWidth;
-                canvas.height = targetHeight;
+                      // Llenar todo el canvas con el color de fondo
+                      ctx.fillStyle = backgroundColor;
+                      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                const ctx = canvas.getContext('2d');
+                      // Calcular las dimensiones para centrar la imagen en el área designada (sin padding)
+                      const aspectRatio = img.width / img.height;
+                      let drawWidth, drawHeight, offsetX, offsetY;
 
-                // Obtener el color seleccionado
-                const backgroundColor = backgroundColorInput.value;
+                      if (aspectRatio > 1) {
+                          // Imagen más ancha que alta
+                          drawWidth = targetWidth;
+                          drawHeight = targetWidth / aspectRatio;
+                          offsetX = paddingLeftPx;
+                          offsetY = paddingTopPx + (targetHeight - drawHeight) / 2;
+                      } else {
+                          // Imagen más alta que ancha
+                          drawWidth = targetHeight * aspectRatio;
+                          drawHeight = targetHeight;
+                          offsetX = paddingLeftPx + (targetWidth - drawWidth) / 2;
+                          offsetY = paddingTopPx;
+                      }
 
-                // Dibujar el fondo con el color seleccionado
-                ctx.fillStyle = backgroundColor;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                      // Dibujar la imagen centrada en el área designada
+                      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
-                // Calcular las dimensiones para centrar la imagen
-                const aspectRatio = img.width / img.height;
-                let drawWidth, drawHeight, offsetX, offsetY;
+                      // Determinar el formato de salida
+                      let mimeType = format === 'webp' ? 'image/webp' : 'image/jpeg';
+                      const dataUrl = canvas.toDataURL(mimeType, 0.9);
 
-                if (aspectRatio > 1) {
-                    drawWidth = targetWidth;
-                    drawHeight = targetWidth / aspectRatio;
-                    offsetX = 0;
-                    offsetY = (targetHeight - drawHeight) / 2;
-                } else {
-                    drawWidth = targetHeight * aspectRatio;
-                    drawHeight = targetHeight;
-                    offsetX = (targetWidth - drawWidth) / 2;
-                    offsetY = 0;
-                }
+                      // Actualizar preview
+                      const previewItems = document.querySelectorAll('.preview-item');
+                      if (previewItems[index]) {
+                          const imgElement = previewItems[index].querySelector('img');
+                          imgElement.src = dataUrl;
 
-                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                          const filenameElement = previewItems[index].querySelector('.file-name');
+                          const newFilename = imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`);
+                          filenameElement.textContent = newFilename;
+                      }
 
-                // Determinar el formato de salida
-                let outputFormat = format;
-                let mimeType;
+                      convertedImages.push({
+                          dataUrl: dataUrl,
+                          filename: imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`)
+                      });
 
-                // Si el archivo original ya es WebP y el formato seleccionado es WebP, mantener WebP
-                if (imageFile.type === 'image/webp' && format === 'webp') {
-                    mimeType = 'image/webp';
-                } else {
-                    mimeType = format === 'webp' ? 'image/webp' : 'image/jpeg';
-                }
+                      resolve();
+                  };
+                  img.src = e.target.result;
+              };
+              reader.readAsDataURL(imageFile);
+          });
+      }
 
-                const dataUrl = canvas.toDataURL(mimeType, 0.9);
+      // Descargar todas las imágenes convertidas
+      downloadAllButton.addEventListener('click', downloadAllImages);
 
-                const previewItems = document.querySelectorAll('.preview-item');
-                if (previewItems[index]) {
-                    const imgElement = previewItems[index].querySelector('img');
-                    imgElement.src = dataUrl;
+      async function downloadAllImages() {
+          if (convertedImages.length === 0) return;
 
-                    const filenameElement = previewItems[index].querySelector('.file-name');
-                    const newFilename = imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`);
-                    filenameElement.textContent = newFilename;
-                }
+          updateStatus("Preparando imágenes para descarga...");
 
-                convertedImages.push({
-                    dataUrl: dataUrl,
-                    filename: imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`)
-                });
+          const selectedFormat = formatSelect.value;
+          const prefix = document.getElementById('prefix-input').value.trim();
 
-                resolve();
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(imageFile);
-    });
-}
+          const renameInputs = document.querySelectorAll('.rename-input');
+          renameInputs.forEach((input, index) => {
+              const newName = input.value.trim();
+              if (newName) {
+                  convertedImages[index].filename = `${prefix}${newName}.${selectedFormat}`;
+              }
+          });
 
-// Descargar todas las imágenes convertidas
-downloadAllButton.addEventListener('click', downloadAllImages);
+          const zip = new JSZip();
+          const folder = zip.folder("imagenes_convertidas");
 
-async function downloadAllImages() {
-    if (convertedImages.length === 0) return;
+          convertedImages.forEach(image => {
+              const base64Data = image.dataUrl.split(",")[1];
+              const updatedFilename = image.filename;
+              folder.file(updatedFilename, base64Data, { base64: true });
+          });
 
-    updateStatus("Preparando imágenes para descarga...");
+          try {
+              const content = await zip.generateAsync({ type: "blob" });
+              const zipName = zipNameInput.value.trim() || "imagenes_convertidas";
+              saveAs(content, `${zipName}.zip`);
+              updateStatus("Todas las imágenes han sido descargadas en un archivo ZIP");
+          } catch (error) {
+              console.error("Error al generar el archivo ZIP:", error);
+              updateStatus("Error al generar el archivo ZIP");
+          }
+      }
 
-    // Obtener el formato seleccionado y el prefijo
-    const selectedFormat = formatSelect.value; // "webp" o "jpg"
-    const prefix = document.getElementById('prefix-input').value.trim(); // Obtener el prefijo
+      // Descargar imágenes directamente
+      downloadDirectButton.addEventListener('click', () => {
+          if (convertedImages.length === 0) return;
 
-    // Sincronizar los nombres personalizados con los inputs
-    const renameInputs = document.querySelectorAll('.rename-input');
-    renameInputs.forEach((input, index) => {
-        const newName = input.value.trim();
-        if (newName) {
-            // Agregar el prefijo y la extensión seleccionada al final del nombre personalizado
-            convertedImages[index].filename = `${prefix}${newName}.${selectedFormat}`;
-        }
-    });
+          updateStatus("Descargando imágenes una por una...");
 
-    const zip = new JSZip();
-    const folder = zip.folder("imagenes_convertidas");
+          const selectedFormat = formatSelect.value;
+          const prefix = document.getElementById('prefix-input').value.trim();
 
-    convertedImages.forEach(image => {
-        const base64Data = image.dataUrl.split(",")[1]; // Extraer datos base64
-        const updatedFilename = image.filename; // Usar el nombre actualizado con el prefijo y la extensión
-        folder.file(updatedFilename, base64Data, { base64: true });
-    });
+          const renameInputs = document.querySelectorAll('.rename-input');
+          renameInputs.forEach((input, index) => {
+              const originalFilename = avifFiles[index].name;
+              let newName = input.value.trim();
 
-    try {
-        const content = await zip.generateAsync({ type: "blob" });
-        const zipName = zipNameInput.value.trim() || "imagenes_convertidas"; // Usar el nombre del ZIP ingresado
-        saveAs(content, `${zipName}.zip`);
-        updateStatus("Todas las imágenes han sido descargadas en un archivo ZIP");
-    } catch (error) {
-        console.error("Error al generar el archivo ZIP:", error);
-        updateStatus("Error al generar el archivo ZIP");
-    }
-}
+              if (!newName) {
+                  newName = originalFilename.replace(/\.[^/.]+$/, "");
+              }
 
-// Descargar imágenes directamente
-downloadDirectButton.addEventListener('click', () => {
-    if (convertedImages.length === 0) return;
+              const finalFilename = `${prefix}${newName}.${selectedFormat}`;
 
-    updateStatus("Descargando imágenes una por una...");
+              if (convertedImages[index]) {
+                  downloadSingleImage(convertedImages[index].dataUrl, finalFilename);
+              }
+          });
 
-    // Obtener el formato seleccionado y el prefijo
-    const selectedFormat = formatSelect.value; // "webp" o "jpg"
-    const prefix = document.getElementById('prefix-input').value.trim(); // Obtener el prefijo
+          updateStatus("Todas las imágenes han sido descargadas directamente");
+      });
 
-    // Sincronizar los nombres personalizados con los inputs y descargar
-    const renameInputs = document.querySelectorAll('.rename-input');
-    renameInputs.forEach((input, index) => {
-        const originalFilename = avifFiles[index].name; // Nombre original para fallback
-        let newName = input.value.trim();
+      function downloadSingleImage(dataUrl, filename) {
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
 
-        // Si el input está vacío, usar el nombre original sin extensión
-        if (!newName) {
-            newName = originalFilename.replace(/\.[^/.]+$/, "");
-        }
+      function updateStatus(message) {
+          statusElement.textContent = message;
+      }
 
-        // Construir el nombre final con prefijo y extensión
-        const finalFilename = `${prefix}${newName}.${selectedFormat}`;
+      function removeImage(index) {
+          avifFiles.splice(index, 1);
+          updatePreview();
 
-        // Descargar la imagen individualmente con el nombre final
-        if (convertedImages[index]) {
-            downloadSingleImage(convertedImages[index].dataUrl, finalFilename);
-        }
-    });
+          if (avifFiles.length === 0) {
+              convertButton.disabled = true;
+              updateStatus("No hay imágenes para procesar");
+          } else {
+              updateStatus(`Se han seleccionado ${avifFiles.length} archivos`);
+          }
+      }
 
-    updateStatus("Todas las imágenes han sido descargadas directamente");
-});
-
-function downloadSingleImage(dataUrl, filename) {
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-function updateStatus(message) {
-    statusElement.textContent = message;
-}
-
-function removeImage(index) {
-    // Eliminar el archivo de la lista
-    avifFiles.splice(index, 1);
-
-    // Actualizar la previsualización
-    updatePreview();
-
-    // Deshabilitar el botón de convertir si no quedan imágenes
-    if (avifFiles.length === 0) {
-        convertButton.disabled = true;
-        updateStatus("No hay imágenes para procesar");
-    } else {
-        updateStatus(`Se han seleccionado ${avifFiles.length} archivos`);
-    }
-}
-
-function updatePreview() {
-    // Limpiar el área de previsualización
-    previewArea.innerHTML = '';
-
-    // Volver a mostrar las imágenes restantes
-    avifFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            displayPreview(e.target.result, file.name, index);
-        };
-        reader.readAsDataURL(file);
-    });
-}
+      function updatePreview() {
+          previewArea.innerHTML = '';
+          avifFiles.forEach((file, index) => {
+              const reader = new FileReader();
+              reader.onload = function (e) {
+                  displayPreview(e.target.result, file.name, index);
+              };
+              reader.readAsDataURL(file);
+          });
+      }

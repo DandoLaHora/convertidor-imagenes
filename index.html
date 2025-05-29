@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Convertidor a WebP</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convertidor a WebP</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
   <body>
     <h1>Convertidor y Redimensionador de Imágenes</h1>
     <div class="container" id="drop-area">
@@ -24,36 +26,76 @@
       <input type="text" id="prefix-input" placeholder="Ejemplo: SKU123_" />
       <button id="convert-button" disabled>Convertir</button>
       <button id="download-all" disabled>Descargar todos (.zip)</button>
-      <button id="download-direct" disabled>
-        Descargar una a una
-      </button>
+      <button id="download-direct" disabled>Descargar una a una</button>
       <div>
-          <label for="zip-name" id="zip-name-label">Nombre de archivo Zip</label>
-          <input
-            type="text"
-            id="zip-name"
-            placeholder="Nombre del archivo ZIP"
-            value="imagenes_convertidas"
-          />
-
+        <label for="zip-name" id="zip-name-label">Nombre de archivo Zip</label>
+        <input type="text" id="zip-name" placeholder="Nombre del archivo ZIP" value="imagenes_convertidas" />
       </div>
-
     </div>
 
     <div class="buttons seccion-dimensiones">
-      <h4>Dimensiones:</h4>
-      <div>
-        <label for="width-input">Ancho:</label>
-        <input type="number" id="width-input" value="1000" min="1" />
+      <h4>Dimensiones y Espaciado:</h4>
+      <div class="dimension-group">
+        <div class="dimension-item">
+          <label for="width-input">Ancho:</label>
+          <input type="number" id="width-input" value="1000" min="1" />
+        </div>
+        <div class="dimension-item">
+          <label for="height-input">Alto:</label>
+          <input type="number" id="height-input" value="1000" min="1" />
+        </div>
+        <div class="dimension-item">
+          <label for="background-color">Color de fondo:</label>
+          <input type="color" id="background-color" value="#ffffff" />
+          <small class="helper-text">Color para transparencias y padding</small>
+        </div>
       </div>
-      <div>
-        <label for="height-input">Alto:</label>
-        <input type="number" id="height-input" value="1000" min="1" />
-      </div>
-      <div>
-        <label for="background-color">Color de fondo:</label>
-        <input type="color" id="background-color" value="#ffffff" />
-        <small class="helper-text">Nota: Si la imagen tiene transparencia, este color se utilizará como fondo.</small>
+      
+      <div class="padding-controls">
+        <label><strong>Padding Vertical:</strong></label>
+        
+        <div class="padding-input-group">
+          <label for="padding-top">Superior:</label>
+          <input type="number" id="padding-top" value="0" min="0" step="1" />
+          <select id="padding-top-unit">
+            <option value="px">px</option>
+            <option value="%">%</option>
+          </select>
+        </div>
+        
+        <div class="padding-input-group">
+          <label for="padding-bottom">Inferior:</label>
+          <input type="number" id="padding-bottom" value="0" min="0" step="1" />
+          <select id="padding-bottom-unit">
+            <option value="px">px</option>
+            <option value="%">%</option>
+          </select>
+        </div>
+        
+        <label><strong>Padding Horizontal:</strong></label>
+        
+        <div class="padding-input-group">
+          <label for="padding-left">Izquierda:</label>
+          <input type="number" id="padding-left" value="0" min="0" step="1" />
+          <select id="padding-left-unit">
+            <option value="px">px</option>
+            <option value="%">%</option>
+          </select>
+        </div>
+        
+        <div class="padding-input-group">
+          <label for="padding-right">Derecha:</label>
+          <input type="number" id="padding-right" value="0" min="0" step="1" />
+          <select id="padding-right-unit">
+            <option value="px">px</option>
+            <option value="%">%</option>
+          </select>
+        </div>
+        
+        <small class="helper-text">
+          Agrega espacio extra en todos los lados de la imagen. 
+          Los % verticales se calculan basados en la altura, los horizontales en el ancho de la imagen original.
+        </small>
       </div>
     </div>
 
@@ -63,8 +105,9 @@
 
     <div id="preview"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="myscript.js"></script>
-  </body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="myscript.js"></script>
+</body>
+
 </html>
