@@ -99,10 +99,12 @@
       function displayPreview(src, filename, index) {
           const item = document.createElement('div');
           item.className = 'preview-item';
+          // Extraer el nombre base sin extensión
+          const nameWithoutExtension = filename.replace(/\.(avif|png|jpg|jpeg|webp)$/i, '');
           item.innerHTML = `
               <img src="${src}" alt="Previsualización" />
               <div class="file-name">${filename}</div>
-              <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${filename}" />
+              <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${nameWithoutExtension}" />
           `;
           previewArea.appendChild(item);
 
