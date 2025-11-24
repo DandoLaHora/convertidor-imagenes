@@ -54,9 +54,13 @@
           return skuMatch ? skuMatch[0] : nameWithoutExt;
       }
 
-      // Función para generar texto alternativo con ChatGPT
-      async function generateAltTextWithChatGPT(sku, apiKey) {
+      // Función para generar texto alternativo con ChatGPT usando Responses API con visión
+      async function generateAltTextWithChatGPT(sku, apiKey, imageDataUrl) {
           try {
+              // Extraer solo el base64 de la imagen (sin el prefijo data:image/...)
+              const base64Data = imageDataUrl.split(',')[1];
+              const mimeType = imageDataUrl.split(';')[0].split(':')[1];
+              
               const response = await fetch('https://api.openai.com/v1/chat/completions', {
                   method: 'POST',
                   headers: {
@@ -68,14 +72,26 @@
                       messages: [
                           {
                               role: 'system',
-                              content: 'Eres un experto en SEO y descripción de productos de relojería. Tu tarea es generar textos alternativos optimizados para SEO para imágenes de relojes basándote en el SKU proporcionado.'
+                              content: 'Eres un experto en SEO y descripción de productos de relojería. Analiza la imagen del reloj y genera un texto alternativo optimizado para SEO.'
                           },
                           {
                               role: 'user',
-                              content: `Genera un texto alternativo optimizado para SEO (máximo 125 caracteres) para una imagen de un reloj con el SKU: "${sku}". El texto debe ser descriptivo, incluir el SKU, y ser atractivo para motores de búsqueda. Enfócate en características típicas de relojes como marca, estilo, material, etc. Solo responde con el texto alternativo, sin explicaciones adicionales.`
+                              content: [
+                                  {
+                                      type: 'text',
+                                      text: `Analiza esta imagen de un reloj con SKU: "${sku}". Genera un texto alternativo optimizado para SEO (máximo 125 caracteres) que incluya el SKU y describa las características visibles del reloj (estilo, colores, materiales aparentes, tipo de carátula, etc.). El texto debe ser atractivo para motores de búsqueda. Solo responde con el texto alternativo, sin explicaciones adicionales.`
+                                  },
+                                  {
+                                      type: 'image_url',
+                                      image_url: {
+                                          url: imageDataUrl,
+                                          detail: 'low' // Usar 'low' para ahorrar tokens
+                                      }
+                                  }
+                              ]
                           }
                       ],
-                      max_tokens: 100,
+                      max_tokens: 150,
                       temperature: 0.7
                   })
               });
@@ -262,7 +278,15 @@
                   try {
                       updateStatus(`Generando texto alternativo para imagen ${i + 1} de ${avifFiles.length}`);
                       const sku = extractSKU(avifFiles[i].name);
-                      const altText = await generateAltTextWithChatGPT(sku, apiKey);
+                      
+                      // Obtener la imagen convertida para enviarla a ChatGPT
+                      const imageDataUrl = convertedImages[i]?.dataUrl;
+                      
+                      if (!imageDataUrl) {
+                          throw new Error('No se pudo obtener la imagen convertida');
+                      }
+                      
+                      const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl);
                       
                       // Guardar el alt text en el objeto de imagen convertida
                       if (convertedImages[i]) {
