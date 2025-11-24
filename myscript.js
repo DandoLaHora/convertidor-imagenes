@@ -398,10 +398,13 @@
                       const imageDataUrl = convertedImages[i]?.dataUrl;
                       
                       if (!imageDataUrl) {
+                          console.error(`Imagen ${i} no tiene dataUrl`);
                           throw new Error('No se pudo obtener la imagen convertida');
                       }
                       
+                      console.log(`Generando alt text para imagen ${i + 1}/${avifFiles.length}: ${avifFiles[i].name}`);
                       const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl);
+                      console.log(`Alt text generado para imagen ${i + 1}: ${altText.substring(0, 50)}...`);
                       
                       // Guardar el alt text en el objeto de imagen convertida
                       if (convertedImages[i]) {
@@ -411,11 +414,15 @@
                       
                       // Mostrar el alt text en el preview con los botones
                       const altTextContainer = document.getElementById(`alt-text-${i}`);
+                      console.log(`Container alt-text-${i} encontrado:`, altTextContainer !== null);
+                      
                       if (altTextContainer) {
                           altTextContainer.style.display = 'block';
                           const textarea = document.querySelector(`#alt-text-textarea-${i}`);
                           const acceptBtn = document.querySelector(`#accept-btn-${i}`);
                           const regenerateBtn = document.querySelector(`#regenerate-btn-${i}`);
+                          
+                          console.log(`Elementos encontrados - textarea: ${textarea !== null}, acceptBtn: ${acceptBtn !== null}, regenerateBtn: ${regenerateBtn !== null}`);
                           
                           if (textarea) {
                               textarea.value = altText;
@@ -423,10 +430,22 @@
                           }
                           if (acceptBtn) acceptBtn.style.display = 'inline-block';
                           if (regenerateBtn) regenerateBtn.style.display = 'inline-block';
+                      } else {
+                          console.error(`No se encontró el contenedor alt-text-${i}`);
                       }
                   } catch (error) {
                       console.error(`Error al generar alt text para imagen ${i + 1}:`, error);
-                      updateStatus(`Error al generar texto alternativo para imagen ${i + 1}: ${error.message}`);
+                      updateStatus(`⚠ Error en imagen ${i + 1}: ${error.message} - Continuando...`);
+                      // Mostrar el contenedor de alt text aunque haya error
+                      const altTextContainer = document.getElementById(`alt-text-${i}`);
+                      if (altTextContainer) {
+                          altTextContainer.style.display = 'block';
+                          const textarea = document.querySelector(`#alt-text-textarea-${i}`);
+                          if (textarea) {
+                              textarea.value = `Error: ${error.message}`;
+                              textarea.style.backgroundColor = '#ffebee';
+                          }
+                      }
                       // Continuar con la siguiente imagen incluso si hay error
                   }
               }
