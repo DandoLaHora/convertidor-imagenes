@@ -22,6 +22,8 @@
       const apiConfigDiv = document.getElementById('api-config');
       const openaiApiKeyInput = document.getElementById('openai-api-key');
       const acceptAllAltBtn = document.getElementById('accept-all-alt-btn');
+    const seoContextInput = document.getElementById('seo-context');
+    const seoKeywordsInput = document.getElementById('seo-keywords');
       
       // Elementos para padding
       const paddingTopInput = document.getElementById('padding-top');
@@ -42,6 +44,19 @@
 
       let avifFiles = [];
       let convertedImages = [];
+
+      function sanitizeFilenameFromAlt(altText, index) {
+          const fallback = `imagen_${index + 1}`;
+          const normalized = altText
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '');
+          const cleaned = normalized
+              .replace(/[^a-z0-9\s_-]/gi, ' ')
+              .trim()
+              .replace(/\s+/g, '_')
+              .toLowerCase();
+          return cleaned || fallback;
+      }
 
       // Función para actualizar la barra de progreso
       function updateProgress(current, total, action = 'Procesando') {
@@ -71,6 +86,26 @@
               if (convertedImages[index]) {
                   convertedImages[index].altText = textarea.value.trim();
                   convertedImages[index].altTextAccepted = true;
+
+                  const sanitizedBaseName = sanitizeFilenameFromAlt(textarea.value.trim(), index);
+                  const existingFilename = convertedImages[index].filename || avifFiles[index]?.name || `imagen_${index + 1}.webp`;
+                  const currentFormat = existingFilename.split('.').pop() || 'webp';
+                  const renameInput = document.querySelector(`.rename-input[data-index="${index}"]`);
+                  const previewItem = document.querySelector(`.preview-item[data-file-index="${index}"] .file-name`);
+                  const newFilename = `${sanitizedBaseName}.${currentFormat}`;
+
+                  if (renameInput) {
+                      renameInput.value = sanitizedBaseName;
+                  }
+                  if (avifFiles[index]) {
+                      avifFiles[index].customName = sanitizedBaseName;
+                  }
+
+                  convertedImages[index].filename = newFilename;
+
+                  if (previewItem) {
+                      previewItem.textContent = newFilename;
+                  }
               }
               
               // Marcar como aceptado visualmente
@@ -111,6 +146,11 @@
       // Función para regenerar alt text de una imagen específica (accesible globalmente)
       window.regenerateAltText = async function(index) {
           const apiKey = openaiApiKeyInput.value.trim();
+          const seoContext = seoContextInput.value.trim();
+          const seoKeywords = seoKeywordsInput.value
+              .split(',')
+              .map(keyword => keyword.trim())
+              .filter(keyword => keyword.length > 0);
           
           if (!apiKey) {
               alert('Por favor ingresa tu API Key de OpenAI');
@@ -136,7 +176,7 @@
                   throw new Error('Imagen no encontrada. Por favor convierte la imagen primero.');
               }
               
-              const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl);
+              const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl, seoContext, seoKeywords);
               
               // Guardar el nuevo alt text
               if (convertedImages[index]) {
@@ -190,11 +230,19 @@
       }
 
       // Función para generar texto alternativo con ChatGPT usando Responses API con visión
-      async function generateAltTextWithChatGPT(sku, apiKey, imageDataUrl) {
+      async function generateAltTextWithChatGPT(sku, apiKey, imageDataUrl, seoContext = '', seoKeywords = []) {
           try {
               // Extraer solo el base64 de la imagen (sin el prefijo data:image/...)
               const base64Data = imageDataUrl.split(',')[1];
               const mimeType = imageDataUrl.split(';')[0].split(':')[1];
+
+              const keywordInstruction = seoKeywords.length > 0
+                  ? ` Palabras clave obligatorias: ${seoKeywords.join(', ')}.`
+                  : '';
+              const contextInstruction = seoContext
+                  ? ` Contexto SEO adicional: ${seoContext}.`
+                  : '';
+              const userPrompt = `Analiza esta imagen de un reloj con SKU: "${sku}".${contextInstruction}${keywordInstruction} Genera un texto alternativo optimizado para SEO (máximo 125 caracteres) que incluya el SKU, describa las características visibles del reloj (estilo, colores, materiales aparentes, tipo de carátula, etc.) y mantenga un tono atractivo para motores de búsqueda. Solo responde con el texto alternativo, sin explicaciones adicionales. Descriptivo pensado en personas con visión reducida`;
               
               const response = await fetch('https://api.openai.com/v1/chat/completions', {
                   method: 'POST',
@@ -207,14 +255,14 @@
                       messages: [
                           {
                               role: 'system',
-                              content: 'Eres un experto en SEO y descripción de productos de relojería. Analiza la imagen del reloj y genera un texto alternativo optimizado para SEO.'
+                              content: 'Eres un experto en SEO y descripción de productos de relojería. Analiza la imagen del reloj y genera un texto alternativo optimizado para SEO que sea muy descriptivo pensado en personas con visión reducida.'
                           },
                           {
                               role: 'user',
                               content: [
                                   {
                                       type: 'text',
-                                      text: `Analiza esta imagen de un reloj con SKU: "${sku}". Genera un texto alternativo optimizado para SEO (máximo 125 caracteres) que incluya el SKU y describa las características visibles del reloj (estilo, colores, materiales aparentes, tipo de carátula, etc.). El texto debe ser atractivo para motores de búsqueda. Solo responde con el texto alternativo, sin explicaciones adicionales.`
+                                      text: userPrompt
                                   },
                                   {
                                       type: 'image_url',
@@ -375,6 +423,12 @@
               // Guardar el nuevo nombre en el archivo original
               if (avifFiles[fileIndex]) {
                   avifFiles[fileIndex].customName = newName;
+                  
+                  // Si la imagen ya fue convertida, actualizar su filename también
+                  if (convertedImages[fileIndex]) {
+                      const currentFormat = convertedImages[fileIndex].filename.split('.').pop();
+                      convertedImages[fileIndex].filename = `${newName}.${currentFormat}`;
+                  }
               }
           });
       }
@@ -396,6 +450,11 @@
           const selectedFormat = formatSelect.value;
           const useChatGPT = enableChatGPTCheckbox.checked;
           const apiKey = openaiApiKeyInput.value.trim();
+          const seoContext = seoContextInput.value.trim();
+          const seoKeywords = seoKeywordsInput.value
+              .split(',')
+              .map(keyword => keyword.trim())
+              .filter(keyword => keyword.length > 0);
 
           // Validar API key si ChatGPT está habilitado
           if (useChatGPT && !apiKey) {
@@ -438,7 +497,7 @@
                           throw new Error('No se pudo obtener la imagen convertida');
                       }
                       
-                      const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl);
+                      const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl, seoContext, seoKeywords);
                       
                       // Guardar el alt text en el objeto de imagen convertida
                       if (convertedImages[i]) {
@@ -582,7 +641,8 @@
                       convertedImages[index] = {
                           dataUrl: dataUrl,
                           filename: finalFilename,
-                          originalIndex: index
+                          originalIndex: index,
+                          originalFileName: imageFile.name // Guardar el nombre original para referencia
                       };
 
                       resolve();
@@ -604,18 +664,19 @@
           const selectedFormat = formatSelect.value;
           const prefix = document.getElementById('prefix-input').value.trim();
 
-          // Actualizar nombres basados en los inputs de renombre
-          const renameInputs = document.querySelectorAll('.rename-input');
-          renameInputs.forEach((input, index) => {
-              const newName = input.value.trim();
-              if (newName && convertedImages[index]) {
-                  convertedImages[index].filename = `${prefix}${newName}.${selectedFormat}`;
-              } else if (convertedImages[index]) {
-                  // Si no hay nombre personalizado, usar el nombre del archivo original
-                  const originalName = avifFiles[index].name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, '');
-                  convertedImages[index].filename = `${prefix}${originalName}.${selectedFormat}`;
-              }
-          });
+          // NO actualizar nombres aquí - ya están correctos desde la conversión
+          // Solo agregar el prefijo si existe
+          if (prefix) {
+              convertedImages.forEach((image, index) => {
+                  if (image && image.filename) {
+                      // Solo agregar prefijo si no lo tiene ya
+                      if (!image.filename.startsWith(prefix)) {
+                          const filenameWithoutPath = image.filename.split('/').pop();
+                          image.filename = `${prefix}${filenameWithoutPath}`;
+                      }
+                  }
+              });
+          }
 
           const zip = new JSZip();
           const folder = zip.folder("imagenes_convertidas");
@@ -669,22 +730,18 @@
 
           updateStatus("Descargando imágenes una por una...");
 
-          const selectedFormat = formatSelect.value;
           const prefix = document.getElementById('prefix-input').value.trim();
-
-          const renameInputs = document.querySelectorAll('.rename-input');
           
-          // Descargar en orden usando índices
+          // Descargar usando los nombres ya asignados en convertedImages
           convertedImages.forEach((image, index) => {
-              if (image && avifFiles[index]) {
-                  const renameInput = renameInputs[index];
-                  let newName = renameInput ? renameInput.value.trim() : '';
-
-                  if (!newName) {
-                      newName = avifFiles[index].name.replace(/\.[^/.]+$/, "");
+              if (image) {
+                  let finalFilename = image.filename;
+                  
+                  // Agregar prefijo si existe y no lo tiene ya
+                  if (prefix && !finalFilename.startsWith(prefix)) {
+                      finalFilename = `${prefix}${finalFilename}`;
                   }
-
-                  const finalFilename = `${prefix}${newName}.${selectedFormat}`;
+                  
                   downloadSingleImage(image.dataUrl, finalFilename);
               }
           });
