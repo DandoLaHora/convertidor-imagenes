@@ -59,6 +59,29 @@
           }
       }
 
+      // Función para aceptar el alt text sugerido (accesible globalmente)
+      window.acceptAltText = function(index) {
+          const textarea = document.querySelector(`#alt-text-textarea-${index}`);
+          const acceptBtn = document.querySelector(`#accept-btn-${index}`);
+          const regenerateBtn = document.querySelector(`#regenerate-btn-${index}`);
+          
+          if (textarea && textarea.value.trim()) {
+              // Marcar como aceptado
+              textarea.classList.add('accepted');
+              textarea.readOnly = true;
+              
+              // Ocultar botones
+              if (acceptBtn) acceptBtn.style.display = 'none';
+              if (regenerateBtn) regenerateBtn.style.display = 'none';
+              
+              // Cambiar estilo visual para indicar aceptación
+              textarea.style.backgroundColor = '#e8f5e9';
+              textarea.style.borderColor = '#4caf50';
+              
+              updateStatus(`✓ Texto alternativo aceptado para imagen ${index + 1}`);
+          }
+      };
+
       // Función para regenerar alt text de una imagen específica (accesible globalmente)
       window.regenerateAltText = async function(index) {
           const apiKey = openaiApiKeyInput.value.trim();
@@ -69,9 +92,14 @@
           }
 
           const regenerateBtn = document.querySelector(`#regenerate-btn-${index}`);
+          const acceptBtn = document.querySelector(`#accept-btn-${index}`);
+          
           if (regenerateBtn) {
               regenerateBtn.disabled = true;
               regenerateBtn.textContent = 'Generando...';
+          }
+          if (acceptBtn) {
+              acceptBtn.disabled = true;
           }
 
           try {
@@ -87,12 +115,17 @@
               // Guardar el nuevo alt text
               if (convertedImages[index]) {
                   convertedImages[index].altText = altText;
+                  convertedImages[index].altTextAccepted = false; // Marcar como no aceptado
               }
               
               // Actualizar la visualización
-              const textarea = document.querySelector(`#alt-text-${index} .alt-text-preview`);
+              const textarea = document.querySelector(`#alt-text-textarea-${index}`);
               if (textarea) {
                   textarea.value = altText;
+                  textarea.classList.remove('accepted');
+                  textarea.readOnly = false;
+                  textarea.style.backgroundColor = 'white';
+                  textarea.style.borderColor = '#ddd';
               }
               
               updateStatus(`✓ Texto alternativo regenerado para imagen ${index + 1}`);
@@ -103,6 +136,9 @@
               if (regenerateBtn) {
                   regenerateBtn.disabled = false;
                   regenerateBtn.textContent = '🔄 Regenerar';
+              }
+              if (acceptBtn) {
+                  acceptBtn.disabled = false;
               }
           }
       };
@@ -293,9 +329,12 @@
               <div class="file-name">${filename}</div>
               <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${nameWithoutExtension}" />
               <div class="alt-text-container" id="alt-text-${index}" style="display: none;">
-                  <label>Texto alternativo generado:</label>
-                  <textarea class="alt-text-preview" readonly></textarea>
-                  <button class="regenerate-alt-btn" id="regenerate-btn-${index}" onclick="regenerateAltText(${index})">🔄 Regenerar</button>
+                  <label>Texto alternativo sugerido por ChatGPT:</label>
+                  <textarea class="alt-text-preview" id="alt-text-textarea-${index}"></textarea>
+                  <div class="alt-text-buttons">
+                      <button class="accept-alt-btn" id="accept-btn-${index}" onclick="acceptAltText(${index})" style="display: none;">✓ Aceptar</button>
+                      <button class="regenerate-alt-btn" id="regenerate-btn-${index}" onclick="regenerateAltText(${index})" style="display: none;">🔄 Regenerar</button>
+                  </div>
               </div>
           `;
           previewArea.appendChild(item);
@@ -367,14 +406,23 @@
                       // Guardar el alt text en el objeto de imagen convertida
                       if (convertedImages[i]) {
                           convertedImages[i].altText = altText;
+                          convertedImages[i].altTextAccepted = false; // Inicialmente no aceptado
                       }
                       
-                      // Mostrar el alt text en el preview
+                      // Mostrar el alt text en el preview con los botones
                       const altTextContainer = document.getElementById(`alt-text-${i}`);
                       if (altTextContainer) {
                           altTextContainer.style.display = 'block';
-                          const textarea = altTextContainer.querySelector('.alt-text-preview');
-                          textarea.value = altText;
+                          const textarea = document.querySelector(`#alt-text-textarea-${i}`);
+                          const acceptBtn = document.querySelector(`#accept-btn-${i}`);
+                          const regenerateBtn = document.querySelector(`#regenerate-btn-${i}`);
+                          
+                          if (textarea) {
+                              textarea.value = altText;
+                              textarea.readOnly = false;
+                          }
+                          if (acceptBtn) acceptBtn.style.display = 'inline-block';
+                          if (regenerateBtn) regenerateBtn.style.display = 'inline-block';
                       }
                   } catch (error) {
                       console.error(`Error al generar alt text para imagen ${i + 1}:`, error);
