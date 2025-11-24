@@ -12,6 +12,11 @@
       const heightInput = document.getElementById('height-input');
       const backgroundColorInput = document.getElementById('background-color');
       
+      // Elementos para ChatGPT
+      const enableChatGPTCheckbox = document.getElementById('enable-chatgpt');
+      const apiConfigDiv = document.getElementById('api-config');
+      const openaiApiKeyInput = document.getElementById('openai-api-key');
+      
       // Elementos para padding
       const paddingTopInput = document.getElementById('padding-top');
       const paddingBottomInput = document.getElementById('padding-bottom');
@@ -31,6 +36,62 @@
 
       let avifFiles = [];
       let convertedImages = [];
+
+      // Event listener para checkbox de ChatGPT
+      enableChatGPTCheckbox.addEventListener('change', function() {
+          apiConfigDiv.style.display = this.checked ? 'flex' : 'none';
+      });
+
+      // Función para extraer SKU del nombre del archivo
+      function extractSKU(filename) {
+          // Remover extensión
+          const nameWithoutExt = filename.replace(/\.(avif|png|jpg|jpeg|webp)$/i, '');
+          
+          // Buscar patrones comunes de SKU (números, letras y guiones)
+          // Ejemplo: SKU123, ABC-123, 12345, etc.
+          const skuMatch = nameWithoutExt.match(/[A-Z0-9\-_]+/i);
+          
+          return skuMatch ? skuMatch[0] : nameWithoutExt;
+      }
+
+      // Función para generar texto alternativo con ChatGPT
+      async function generateAltTextWithChatGPT(sku, apiKey) {
+          try {
+              const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${apiKey}`
+                  },
+                  body: JSON.stringify({
+                      model: 'gpt-4o-mini',
+                      messages: [
+                          {
+                              role: 'system',
+                              content: 'Eres un experto en SEO y descripción de productos de relojería. Tu tarea es generar textos alternativos optimizados para SEO para imágenes de relojes basándote en el SKU proporcionado.'
+                          },
+                          {
+                              role: 'user',
+                              content: `Genera un texto alternativo optimizado para SEO (máximo 125 caracteres) para una imagen de un reloj con el SKU: "${sku}". El texto debe ser descriptivo, incluir el SKU, y ser atractivo para motores de búsqueda. Enfócate en características típicas de relojes como marca, estilo, material, etc. Solo responde con el texto alternativo, sin explicaciones adicionales.`
+                          }
+                      ],
+                      max_tokens: 100,
+                      temperature: 0.7
+                  })
+              });
+
+              if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(`Error de API: ${errorData.error?.message || response.statusText}`);
+              }
+
+              const data = await response.json();
+              return data.choices[0].message.content.trim();
+          } catch (error) {
+              console.error('Error al generar alt text con ChatGPT:', error);
+              throw error;
+          }
+      }
 
       // Event listeners para botones de padding
       setAllPaddingButton.addEventListener('click', () => {
@@ -145,6 +206,10 @@
               <img src="${src}" alt="Previsualización" />
               <div class="file-name">${filename}</div>
               <input type="text" class="rename-input" data-index="${index}" placeholder="Nuevo nombre" value="${nameWithoutExtension}" />
+              <div class="alt-text-container" id="alt-text-${index}" style="display: none;">
+                  <label>Texto alternativo generado:</label>
+                  <textarea class="alt-text-preview" readonly></textarea>
+              </div>
           `;
           previewArea.appendChild(item);
 
@@ -174,6 +239,15 @@
           if (avifFiles.length === 0) return;
 
           const selectedFormat = formatSelect.value;
+          const useChatGPT = enableChatGPTCheckbox.checked;
+          const apiKey = openaiApiKeyInput.value.trim();
+
+          // Validar API key si ChatGPT está habilitado
+          if (useChatGPT && !apiKey) {
+              alert('Por favor ingresa tu API Key de OpenAI para usar ChatGPT');
+              return;
+          }
+
           convertButton.disabled = true;
           updateStatus("Convirtiendo imágenes...");
           convertedImages = [];
@@ -182,6 +256,32 @@
           for (let i = 0; i < avifFiles.length; i++) {
               updateStatus(`Convirtiendo imagen ${i + 1} de ${avifFiles.length}`);
               await convertImageWithPadding(avifFiles[i], i, selectedFormat);
+              
+              // Generar alt text con ChatGPT si está habilitado
+              if (useChatGPT) {
+                  try {
+                      updateStatus(`Generando texto alternativo para imagen ${i + 1} de ${avifFiles.length}`);
+                      const sku = extractSKU(avifFiles[i].name);
+                      const altText = await generateAltTextWithChatGPT(sku, apiKey);
+                      
+                      // Guardar el alt text en el objeto de imagen convertida
+                      if (convertedImages[i]) {
+                          convertedImages[i].altText = altText;
+                      }
+                      
+                      // Mostrar el alt text en el preview
+                      const altTextContainer = document.getElementById(`alt-text-${i}`);
+                      if (altTextContainer) {
+                          altTextContainer.style.display = 'block';
+                          const textarea = altTextContainer.querySelector('.alt-text-preview');
+                          textarea.value = altText;
+                      }
+                  } catch (error) {
+                      console.error(`Error al generar alt text para imagen ${i + 1}:`, error);
+                      updateStatus(`Error al generar texto alternativo para imagen ${i + 1}: ${error.message}`);
+                      // Continuar con la siguiente imagen incluso si hay error
+                  }
+              }
           }
 
           updateStatus(`Se han convertido ${convertedImages.length} imágenes a ${selectedFormat.toUpperCase()}`);

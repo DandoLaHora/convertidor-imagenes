@@ -16,6 +16,21 @@
       <button id="select-files">Seleccionar archivos</button>
     </div>
 
+    <div class="buttons chatgpt-config">
+      <h4>Configuración de ChatGPT (Opcional):</h4>
+      <div class="config-group">
+        <label>
+          <input type="checkbox" id="enable-chatgpt" />
+          Generar texto alternativo optimizado con ChatGPT
+        </label>
+        <div class="api-config" id="api-config" style="display: none;">
+          <label for="openai-api-key">API Key de OpenAI:</label>
+          <input type="password" id="openai-api-key" placeholder="sk-..." style="width: 300px;" />
+          <small class="helper-text">Tu API key será utilizada solo durante esta sesión y no se almacenará.</small>
+        </div>
+      </div>
+    </div>
+
     <div class="buttons">
       <label for="format-select">Formato de exportación:</label>
       <select id="format-select">

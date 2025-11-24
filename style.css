@@ -44,6 +44,35 @@ h1 {
   align-items: flex-start;
 }
 
+.chatgpt-config {
+  flex-direction: column;
+  align-items: flex-start;
+  background-color: #e8f5e9;
+  border: 2px solid #4caf50;
+}
+
+.chatgpt-config h4 {
+  margin: 0 0 15px 0;
+  color: #2e7d32;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.api-config {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f1f8e9;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .seccion-dimensiones h4 {
   margin: 0 0 15px 0;
   color: #333;
@@ -219,6 +248,33 @@ input[type="text"] {
 .rename-input {
   width: 100%;
   margin-top: 10px;
+}
+
+.alt-text-container {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f0f8ff;
+  border-radius: 5px;
+  border: 1px solid #2196F3;
+}
+
+.alt-text-container label {
+  display: block;
+  margin-bottom: 5px;
+  color: #1976D2;
+  font-size: 12px;
+}
+
+.alt-text-preview {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  resize: vertical;
+  font-family: Arial, sans-serif;
+  background-color: white;
 }
 
 #file-input {
