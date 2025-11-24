@@ -21,6 +21,7 @@
       const enableChatGPTCheckbox = document.getElementById('enable-chatgpt');
       const apiConfigDiv = document.getElementById('api-config');
       const openaiApiKeyInput = document.getElementById('openai-api-key');
+      const acceptAllAltBtn = document.getElementById('accept-all-alt-btn');
       
       // Elementos para padding
       const paddingTopInput = document.getElementById('padding-top');
@@ -66,10 +67,10 @@
           const regenerateBtn = document.querySelector(`#regenerate-btn-${index}`);
           
           if (textarea && textarea.value.trim()) {
-              // Marcar como aceptado en el objeto
+              // Guardar el texto actual (editado o no) en el objeto
               if (convertedImages[index]) {
+                  convertedImages[index].altText = textarea.value.trim();
                   convertedImages[index].altTextAccepted = true;
-                  convertedImages[index].altText = textarea.value; // Guardar el texto actual (por si fue editado)
               }
               
               // Marcar como aceptado visualmente
@@ -85,6 +86,25 @@
               textarea.style.borderColor = '#4caf50';
               
               updateStatus(`✓ Texto alternativo aceptado para imagen ${index + 1}`);
+          }
+      };
+
+      // Función para aceptar todos los alt texts a la vez
+      window.acceptAllAltTexts = function() {
+          let acceptedCount = 0;
+          convertedImages.forEach((image, index) => {
+              if (image && image.altText) {
+                  const textarea = document.querySelector(`#alt-text-textarea-${index}`);
+                  if (textarea && !textarea.classList.contains('accepted')) {
+                      acceptAltText(index);
+                      acceptedCount++;
+                  }
+              }
+          });
+          
+          if (acceptedCount > 0) {
+              updateStatus(`✓ ${acceptedCount} textos alternativos aceptados`);
+              acceptAllAltBtn.style.display = 'none';
           }
       };
 
@@ -153,6 +173,9 @@
       enableChatGPTCheckbox.addEventListener('change', function() {
           apiConfigDiv.style.display = this.checked ? 'flex' : 'none';
       });
+
+      // Event listener para botón "Aceptar todo"
+      acceptAllAltBtn.addEventListener('click', acceptAllAltTexts);
 
       // Función para extraer SKU del nombre del archivo
       function extractSKU(filename) {
@@ -462,6 +485,15 @@
           downloadAllButton.disabled = false;
           downloadDirectButton.disabled = false;
           convertButton.disabled = false;
+          
+          // Mostrar botón "Aceptar todo" si se generaron alt texts
+          if (useChatGPT) {
+              const hasAltTexts = convertedImages.some(img => img && img.altText);
+              if (hasAltTexts) {
+                  acceptAllAltBtn.style.display = 'inline-block';
+                  acceptAllAltBtn.disabled = false;
+              }
+          }
       }
 
       function convertImageWithPadding(imageFile, index, format) {
