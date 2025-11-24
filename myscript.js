@@ -384,14 +384,22 @@
           // Procesar las imágenes en orden secuencial para mantener el índice correcto
           for (let i = 0; i < avifFiles.length; i++) {
               currentStep++;
-              updateProgress(currentStep, totalSteps, 'Convirtiendo');
+              const conversionProgress = Math.round((i / avifFiles.length) * 50); // 0-50%
+              progressBar.style.width = conversionProgress + '%';
+              progressText.textContent = conversionProgress + '%';
+              updateStatus(`Convirtiendo imagen ${i + 1} de ${avifFiles.length}`);
+              
               await convertImageWithPadding(avifFiles[i], i, selectedFormat);
               
               // Generar alt text con ChatGPT si está habilitado
               if (useChatGPT) {
                   try {
                       currentStep++;
-                      updateProgress(currentStep, totalSteps, 'Generando texto alternativo para');
+                      const altTextProgress = 50 + Math.round((i / avifFiles.length) * 50); // 50-100%
+                      progressBar.style.width = altTextProgress + '%';
+                      progressText.textContent = altTextProgress + '%';
+                      updateStatus(`Generando texto alternativo para imagen ${i + 1} de ${avifFiles.length}`);
+                      
                       const sku = extractSKU(avifFiles[i].name);
                       
                       // Obtener la imagen convertida para enviarla a ChatGPT
@@ -582,19 +590,43 @@
           const zip = new JSZip();
           const folder = zip.folder("imagenes_convertidas");
 
+          // Crear archivo de texto con los alt texts
+          let altTextsContent = "TEXTOS ALTERNATIVOS GENERADOS\n";
+          altTextsContent += "=".repeat(50) + "\n\n";
+
           // Procesar en orden para mantener la secuencia
           convertedImages.forEach((image, index) => {
               if (image) {
                   const base64Data = image.dataUrl.split(",")[1];
                   folder.file(image.filename, base64Data, { base64: true });
+                  
+                  // Agregar alt text al archivo si existe
+                  if (image.altText) {
+                      altTextsContent += `Archivo: ${image.filename}\n`;
+                      altTextsContent += `Texto alternativo: ${image.altText}\n`;
+                      altTextsContent += `Estado: ${image.altTextAccepted ? 'Aceptado' : 'Pendiente'}\n`;
+                      altTextsContent += "-".repeat(50) + "\n\n";
+                  }
               }
           });
+
+          // Agregar archivo de alt texts si hay alguno generado
+          const hasAltTexts = convertedImages.some(img => img && img.altText);
+          if (hasAltTexts) {
+              folder.file("alt-texts.txt", altTextsContent);
+          }
 
           try {
               const content = await zip.generateAsync({ type: "blob" });
               const zipName = zipNameInput.value.trim() || "imagenes_convertidas";
               saveAs(content, `${zipName}.zip`);
-              updateStatus("Todas las imágenes han sido descargadas en un archivo ZIP");
+              
+              const altTextCount = convertedImages.filter(img => img && img.altText).length;
+              let statusMsg = "✓ Todas las imágenes descargadas en ZIP";
+              if (altTextCount > 0) {
+                  statusMsg += ` (incluye archivo alt-texts.txt con ${altTextCount} textos alternativos)`;
+              }
+              updateStatus(statusMsg);
           } catch (error) {
               console.error("Error al generar el archivo ZIP:", error);
               updateStatus("Error al generar el archivo ZIP");
