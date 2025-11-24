@@ -52,44 +52,62 @@
       </div>
       
       <div class="padding-controls">
-        <label><strong>Padding Vertical:</strong></label>
-        
-        <div class="padding-input-group">
-          <label for="padding-top">Superior:</label>
-          <input type="number" id="padding-top" value="0" min="0" step="1" />
-          <select id="padding-top-unit">
-            <option value="px">px</option>
-            <option value="%">%</option>
-          </select>
+        <div class="padding-all-control">
+          <label><strong>Establecer Todo el Padding:</strong></label>
+          <div class="padding-input-group">
+            <input type="number" id="padding-all-value" value="5" min="0" step="1" />
+            <select id="padding-all-unit">
+              <option value="px">px</option>
+              <option value="%" selected>%</option>
+            </select>
+            <button type="button" id="set-all-padding">Aplicar a Todos</button>
+          </div>
         </div>
         
-        <div class="padding-input-group">
-          <label for="padding-bottom">Inferior:</label>
-          <input type="number" id="padding-bottom" value="0" min="0" step="1" />
-          <select id="padding-bottom-unit">
-            <option value="px">px</option>
-            <option value="%">%</option>
-          </select>
+        <label><strong>Padding Vertical:</strong></label>
+        <div class="padding-section">
+          <div class="padding-input-group">
+            <label for="padding-top">Superior:</label>
+            <input type="number" id="padding-top" value="5" min="0" step="1" />
+            <select id="padding-top-unit">
+              <option value="px">px</option>
+              <option value="%" selected>%</option>
+            </select>
+          </div>
+          
+          <div class="padding-input-group">
+            <label for="padding-bottom">Inferior:</label>
+            <input type="number" id="padding-bottom" value="5" min="0" step="1" />
+            <select id="padding-bottom-unit">
+              <option value="px">px</option>
+              <option value="%" selected>%</option>
+            </select>
+          </div>
+          
+          <button type="button" id="set-vertical-padding" class="padding-sync-btn">↕ Igualar Vertical</button>
         </div>
         
         <label><strong>Padding Horizontal:</strong></label>
-        
-        <div class="padding-input-group">
-          <label for="padding-left">Izquierda:</label>
-          <input type="number" id="padding-left" value="0" min="0" step="1" />
-          <select id="padding-left-unit">
-            <option value="px">px</option>
-            <option value="%">%</option>
-          </select>
-        </div>
-        
-        <div class="padding-input-group">
-          <label for="padding-right">Derecha:</label>
-          <input type="number" id="padding-right" value="0" min="0" step="1" />
-          <select id="padding-right-unit">
-            <option value="px">px</option>
-            <option value="%">%</option>
-          </select>
+        <div class="padding-section">
+          <div class="padding-input-group">
+            <label for="padding-left">Izquierda:</label>
+            <input type="number" id="padding-left" value="5" min="0" step="1" />
+            <select id="padding-left-unit">
+              <option value="px">px</option>
+              <option value="%" selected>%</option>
+            </select>
+          </div>
+          
+          <div class="padding-input-group">
+            <label for="padding-right">Derecha:</label>
+            <input type="number" id="padding-right" value="5" min="0" step="1" />
+            <select id="padding-right-unit">
+              <option value="px">px</option>
+              <option value="%" selected>%</option>
+            </select>
+          </div>
+          
+          <button type="button" id="set-horizontal-padding" class="padding-sync-btn">↔ Igualar Horizontal</button>
         </div>
         
         <small class="helper-text">

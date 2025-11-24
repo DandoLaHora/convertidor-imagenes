@@ -22,8 +22,47 @@
       const paddingLeftUnitSelect = document.getElementById('padding-left-unit');
       const paddingRightUnitSelect = document.getElementById('padding-right-unit');
 
+      // Elementos para controles de padding globales
+      const paddingAllValueInput = document.getElementById('padding-all-value');
+      const paddingAllUnitSelect = document.getElementById('padding-all-unit');
+      const setAllPaddingButton = document.getElementById('set-all-padding');
+      const setVerticalPaddingButton = document.getElementById('set-vertical-padding');
+      const setHorizontalPaddingButton = document.getElementById('set-horizontal-padding');
+
       let avifFiles = [];
       let convertedImages = [];
+
+      // Event listeners para botones de padding
+      setAllPaddingButton.addEventListener('click', () => {
+          const value = paddingAllValueInput.value;
+          const unit = paddingAllUnitSelect.value;
+          
+          paddingTopInput.value = value;
+          paddingBottomInput.value = value;
+          paddingLeftInput.value = value;
+          paddingRightInput.value = value;
+          
+          paddingTopUnitSelect.value = unit;
+          paddingBottomUnitSelect.value = unit;
+          paddingLeftUnitSelect.value = unit;
+          paddingRightUnitSelect.value = unit;
+      });
+
+      setVerticalPaddingButton.addEventListener('click', () => {
+          const topValue = paddingTopInput.value;
+          const topUnit = paddingTopUnitSelect.value;
+          
+          paddingBottomInput.value = topValue;
+          paddingBottomUnitSelect.value = topUnit;
+      });
+
+      setHorizontalPaddingButton.addEventListener('click', () => {
+          const leftValue = paddingLeftInput.value;
+          const leftUnit = paddingLeftUnitSelect.value;
+          
+          paddingRightInput.value = leftValue;
+          paddingRightUnitSelect.value = leftUnit;
+      });
 
       // Eventos para drag and drop
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -99,6 +138,7 @@
       function displayPreview(src, filename, index) {
           const item = document.createElement('div');
           item.className = 'preview-item';
+          item.setAttribute('data-file-index', index); // Añadir atributo para rastrear el índice
           // Extraer el nombre base sin extensión
           const nameWithoutExtension = filename.replace(/\.(avif|png|jpg|jpeg|webp)$/i, '');
           item.innerHTML = `
@@ -111,8 +151,10 @@
           const renameInput = item.querySelector('.rename-input');
           renameInput.addEventListener('input', (e) => {
               const newName = e.target.value.trim();
-              if (convertedImages[index]) {
-                  convertedImages[index].filename = newName || filename;
+              const fileIndex = parseInt(e.target.getAttribute('data-index'), 10);
+              // Guardar el nuevo nombre en el archivo original
+              if (avifFiles[fileIndex]) {
+                  avifFiles[fileIndex].customName = newName;
               }
           });
       }
@@ -136,6 +178,7 @@
           updateStatus("Convirtiendo imágenes...");
           convertedImages = [];
 
+          // Procesar las imágenes en orden secuencial para mantener el índice correcto
           for (let i = 0; i < avifFiles.length; i++) {
               updateStatus(`Convirtiendo imagen ${i + 1} de ${avifFiles.length}`);
               await convertImageWithPadding(avifFiles[i], i, selectedFormat);
@@ -224,10 +267,16 @@
                           filenameElement.textContent = newFilename;
                       }
 
-                      convertedImages.push({
+                      // Obtener el nombre personalizado si existe
+                      const customName = imageFile.customName || imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, '');
+                      const finalFilename = `${customName}.${format}`;
+
+                      // Guardar con el índice correcto para mantener el orden
+                      convertedImages[index] = {
                           dataUrl: dataUrl,
-                          filename: imageFile.name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, `.${format}`)
-                      });
+                          filename: finalFilename,
+                          originalIndex: index
+                      };
 
                       resolve();
                   };
@@ -248,21 +297,28 @@
           const selectedFormat = formatSelect.value;
           const prefix = document.getElementById('prefix-input').value.trim();
 
+          // Actualizar nombres basados en los inputs de renombre
           const renameInputs = document.querySelectorAll('.rename-input');
           renameInputs.forEach((input, index) => {
               const newName = input.value.trim();
-              if (newName) {
+              if (newName && convertedImages[index]) {
                   convertedImages[index].filename = `${prefix}${newName}.${selectedFormat}`;
+              } else if (convertedImages[index]) {
+                  // Si no hay nombre personalizado, usar el nombre del archivo original
+                  const originalName = avifFiles[index].name.replace(/\.(avif|png|jpg|jpeg|webp)$/i, '');
+                  convertedImages[index].filename = `${prefix}${originalName}.${selectedFormat}`;
               }
           });
 
           const zip = new JSZip();
           const folder = zip.folder("imagenes_convertidas");
 
-          convertedImages.forEach(image => {
-              const base64Data = image.dataUrl.split(",")[1];
-              const updatedFilename = image.filename;
-              folder.file(updatedFilename, base64Data, { base64: true });
+          // Procesar en orden para mantener la secuencia
+          convertedImages.forEach((image, index) => {
+              if (image) {
+                  const base64Data = image.dataUrl.split(",")[1];
+                  folder.file(image.filename, base64Data, { base64: true });
+              }
           });
 
           try {
@@ -286,18 +342,19 @@
           const prefix = document.getElementById('prefix-input').value.trim();
 
           const renameInputs = document.querySelectorAll('.rename-input');
-          renameInputs.forEach((input, index) => {
-              const originalFilename = avifFiles[index].name;
-              let newName = input.value.trim();
+          
+          // Descargar en orden usando índices
+          convertedImages.forEach((image, index) => {
+              if (image && avifFiles[index]) {
+                  const renameInput = renameInputs[index];
+                  let newName = renameInput ? renameInput.value.trim() : '';
 
-              if (!newName) {
-                  newName = originalFilename.replace(/\.[^/.]+$/, "");
-              }
+                  if (!newName) {
+                      newName = avifFiles[index].name.replace(/\.[^/.]+$/, "");
+                  }
 
-              const finalFilename = `${prefix}${newName}.${selectedFormat}`;
-
-              if (convertedImages[index]) {
-                  downloadSingleImage(convertedImages[index].dataUrl, finalFilename);
+                  const finalFilename = `${prefix}${newName}.${selectedFormat}`;
+                  downloadSingleImage(image.dataUrl, finalFilename);
               }
           });
 
