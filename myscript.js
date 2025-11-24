@@ -12,6 +12,11 @@
       const heightInput = document.getElementById('height-input');
       const backgroundColorInput = document.getElementById('background-color');
       
+      // Elementos de progreso
+      const progressBarContainer = document.getElementById('progress-bar-container');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      
       // Elementos para ChatGPT
       const enableChatGPTCheckbox = document.getElementById('enable-chatgpt');
       const apiConfigDiv = document.getElementById('api-config');
@@ -36,6 +41,71 @@
 
       let avifFiles = [];
       let convertedImages = [];
+
+      // Función para actualizar la barra de progreso
+      function updateProgress(current, total, action = 'Procesando') {
+          const percentage = Math.round((current / total) * 100);
+          progressBar.style.width = percentage + '%';
+          progressText.textContent = percentage + '%';
+          updateStatus(`${action} imagen ${current} de ${total} (${percentage}%)`);
+      }
+
+      // Función para mostrar/ocultar barra de progreso
+      function toggleProgressBar(show) {
+          progressBarContainer.style.display = show ? 'block' : 'none';
+          if (!show) {
+              progressBar.style.width = '0%';
+              progressText.textContent = '0%';
+          }
+      }
+
+      // Función para regenerar alt text de una imagen específica (accesible globalmente)
+      window.regenerateAltText = async function(index) {
+          const apiKey = openaiApiKeyInput.value.trim();
+          
+          if (!apiKey) {
+              alert('Por favor ingresa tu API Key de OpenAI');
+              return;
+          }
+
+          const regenerateBtn = document.querySelector(`#regenerate-btn-${index}`);
+          if (regenerateBtn) {
+              regenerateBtn.disabled = true;
+              regenerateBtn.textContent = 'Generando...';
+          }
+
+          try {
+              const sku = extractSKU(avifFiles[index].name);
+              const imageDataUrl = convertedImages[index]?.dataUrl;
+              
+              if (!imageDataUrl) {
+                  throw new Error('Imagen no encontrada. Por favor convierte la imagen primero.');
+              }
+              
+              const altText = await generateAltTextWithChatGPT(sku, apiKey, imageDataUrl);
+              
+              // Guardar el nuevo alt text
+              if (convertedImages[index]) {
+                  convertedImages[index].altText = altText;
+              }
+              
+              // Actualizar la visualización
+              const textarea = document.querySelector(`#alt-text-${index} .alt-text-preview`);
+              if (textarea) {
+                  textarea.value = altText;
+              }
+              
+              updateStatus(`✓ Texto alternativo regenerado para imagen ${index + 1}`);
+          } catch (error) {
+              console.error(`Error al regenerar alt text:`, error);
+              alert(`Error: ${error.message}`);
+          } finally {
+              if (regenerateBtn) {
+                  regenerateBtn.disabled = false;
+                  regenerateBtn.textContent = '🔄 Regenerar';
+              }
+          }
+      };
 
       // Event listener para checkbox de ChatGPT
       enableChatGPTCheckbox.addEventListener('change', function() {
@@ -225,6 +295,7 @@
               <div class="alt-text-container" id="alt-text-${index}" style="display: none;">
                   <label>Texto alternativo generado:</label>
                   <textarea class="alt-text-preview" readonly></textarea>
+                  <button class="regenerate-alt-btn" id="regenerate-btn-${index}" onclick="regenerateAltText(${index})">🔄 Regenerar</button>
               </div>
           `;
           previewArea.appendChild(item);
@@ -265,18 +336,23 @@
           }
 
           convertButton.disabled = true;
-          updateStatus("Convirtiendo imágenes...");
+          toggleProgressBar(true);
           convertedImages = [];
+
+          const totalSteps = useChatGPT ? avifFiles.length * 2 : avifFiles.length;
+          let currentStep = 0;
 
           // Procesar las imágenes en orden secuencial para mantener el índice correcto
           for (let i = 0; i < avifFiles.length; i++) {
-              updateStatus(`Convirtiendo imagen ${i + 1} de ${avifFiles.length}`);
+              currentStep++;
+              updateProgress(currentStep, totalSteps, 'Convirtiendo');
               await convertImageWithPadding(avifFiles[i], i, selectedFormat);
               
               // Generar alt text con ChatGPT si está habilitado
               if (useChatGPT) {
                   try {
-                      updateStatus(`Generando texto alternativo para imagen ${i + 1} de ${avifFiles.length}`);
+                      currentStep++;
+                      updateProgress(currentStep, totalSteps, 'Generando texto alternativo para');
                       const sku = extractSKU(avifFiles[i].name);
                       
                       // Obtener la imagen convertida para enviarla a ChatGPT
@@ -308,9 +384,11 @@
               }
           }
 
-          updateStatus(`Se han convertido ${convertedImages.length} imágenes a ${selectedFormat.toUpperCase()}`);
+          toggleProgressBar(false);
+          updateStatus(`✓ Se han convertido ${convertedImages.length} imágenes a ${selectedFormat.toUpperCase()}`);
           downloadAllButton.disabled = false;
           downloadDirectButton.disabled = false;
+          convertButton.disabled = false;
       }
 
       function convertImageWithPadding(imageFile, index, format) {
